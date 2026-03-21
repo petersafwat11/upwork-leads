@@ -1,0 +1,15 @@
+node_modules/
+output/
+*.log
+.env
+
+# Data files (auto-generated, persisted via Docker volume)
+data/sent-links.json
+data/run-history.json
+data/chrome-profile/
+
+# Debug artifacts
+debug-*
+
+# Lock files (optional, include if you want deterministic builds)
+# package-lock.json

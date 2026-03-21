@@ -1,0 +1,27 @@
+{
+  "name": "upwork-job-scanner",
+  "version": "2.0.0",
+  "description": "Scans Upwork RSS feeds for relevant job listings and sends Slack/email notifications",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "NODE_ENV=dev node index.js",
+    "scan": "node scripts/manual-scan.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.7",
+    "rss-parser": "^3.13.0"
+  },
+  "optionalDependencies": {
+    "puppeteer": "^24.40.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

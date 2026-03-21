@@ -1,0 +1,6 @@
+node_modules
+output
+.env
+data/sent-links.json
+data/run-history.json
+job_sources/upwork-scraper.js

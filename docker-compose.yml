@@ -1,0 +1,43 @@
+# VPS deployment: scanner + FlareSolverr
+# Usage: cp .env.example .env && edit .env && docker compose up -d
+
+services:
+  scanner:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - FETCH_METHOD=flaresolverr
+      - FLARESOLVERR_URL=http://flaresolverr:8191
+      - UPWORK_RSS_URL=${UPWORK_RSS_URL}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_TO=${EMAIL_TO}
+      - MIN_SCORE=${MIN_SCORE:-8}
+      - MIN_BUDGET=${MIN_BUDGET:-500}
+      - MAX_JOB_AGE_MINUTES=${MAX_JOB_AGE_MINUTES:-15}
+      - CRON_SCHEDULE=${CRON_SCHEDULE:-*/10 * * * *}
+    volumes:
+      - scanner-data:/app/data
+    depends_on:
+      - flaresolverr
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    environment:
+      - LOG_LEVEL=info
+      - TZ=UTC
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
+volumes:
+  scanner-data:
