@@ -9,27 +9,8 @@ const tracker = require("./data/tracker");
 
 const app = express();
 
-/**
- * Check if we're within operating hours (12 PM - 12 AM UTC).
- * No scans between midnight and noon UTC.
- */
-function isWithinOperatingHours() {
-  const nowUtc = new Date();
-  const hour = nowUtc.getUTCHours();
-  // 12 PM (12) to 12 AM (0) = hours 12-23
-  return hour >= 12;
-}
-
 async function runScan() {
-  // Check operating hours
-  if (!config.isDev && !isWithinOperatingHours()) {
-    const hour = new Date().getUTCHours();
-    console.log(
-      `Outside operating hours (${hour}:00 UTC). Scans run 12PM-12AM UTC only. Skipping.`
-    );
-    return;
-  }
-
+  // Runs 24/7 — no operating-hours restriction.
   console.log("\n========================================");
   console.log(`SCAN STARTED: ${new Date().toLocaleString()}`);
   console.log("========================================\n");
@@ -121,9 +102,9 @@ app.get("/", (req, res) => {
   res.json({
     status: "running",
     mode: config.isDev ? "development" : "production",
-    operatingHours: "12:00-23:59 UTC",
+    operatingHours: "24/7",
     currentUtcHour: utcHour,
-    isActive: utcHour >= 12,
+    isActive: true,
     scanInterval: `${config.rss.scanIntervalMinutes} minutes`,
     maxJobAge: `${config.thresholds.maxJobAgeMinutes} minutes`,
     minScore: config.thresholds.minScore,
@@ -168,7 +149,7 @@ if (require.main === module) {
   app.listen(config.port, () => {
     console.log(`\nUpwork Job Scanner running on port ${config.port}`);
     console.log(`Mode: ${config.isDev ? "DEVELOPMENT" : "PRODUCTION"}`);
-    console.log(`Operating hours: 12:00-23:59 UTC`);
+    console.log(`Operating hours: 24/7`);
     console.log(`Scan every: ${config.rss.cronSchedule}`);
     console.log(`Max job age: ${config.thresholds.maxJobAgeMinutes} minutes`);
     console.log(`Min score: ${config.thresholds.minScore}`);
