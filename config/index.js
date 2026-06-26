@@ -52,11 +52,36 @@ const config = {
     reject: 20,
   },
 
+  // Lead logging + daily review (heuristic, $0, no external deps).
+  logging: {
+    // Master switch. Set LOG_LEADS=false to disable all lead logging.
+    enabled: (process.env.LOG_LEADS || "true").toLowerCase() !== "false",
+    // Keep this many days of JSONL log + markdown report files, then prune.
+    retentionDays: parseInt(process.env.LOG_RETENTION_DAYS, 10) || 30,
+    // A below-threshold job whose score is within this many points of minScore
+    // is flagged as a "near-miss" — a top candidate for a wrongly-rejected lead.
+    nearMissWindow: parseInt(process.env.NEAR_MISS_WINDOW, 10) || 4,
+    // How many chars of the description to keep per log record (for review).
+    descriptionSnippetLength:
+      parseInt(process.env.LOG_DESC_LENGTH, 10) || 1000,
+    // Skip re-logging the same link within this many hours (dedup across the
+    // overlapping scan windows). Escalations to "sent" are always logged.
+    dedupWindowHours: parseInt(process.env.LOG_DEDUP_HOURS, 10) || 36,
+    // When the daily report cron runs (server local time). Default 08:00.
+    reportCronSchedule: process.env.REPORT_CRON_SCHEDULE || "0 8 * * *",
+    // Post a compact daily report summary to Slack each morning.
+    postReportToSlack:
+      (process.env.POST_REPORT_TO_SLACK || "true").toLowerCase() !== "false",
+  },
+
   paths: {
     dataDir: path.join(__dirname, "..", "data"),
     sentLinksFile: path.join(__dirname, "..", "data", "sent-links.json"),
     runHistoryFile: path.join(__dirname, "..", "data", "run-history.json"),
     outputDir: path.join(__dirname, "..", "output"),
+    logsDir: path.join(__dirname, "..", "data", "logs"),
+    logSeenFile: path.join(__dirname, "..", "data", "logs", ".seen.json"),
+    reportsDir: path.join(__dirname, "..", "data", "reports"),
   },
 };
 

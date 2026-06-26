@@ -26,6 +26,9 @@ services:
       PORT: "3000"
       FETCH_METHOD: flaresolverr
       FLARESOLVERR_URL: http://flaresolverr:8191
+      # Container-local time = Cairo so the daily lead report fires at 8 AM
+      # local (REPORT_CRON_SCHEDULE default "0 8 * * *"). Needs tzdata (in image).
+      TZ: Africa/Cairo
     volumes:
       # Named volume persists sent-links.json / run-history.json across
       # redeploys so the scanner doesn't re-send leads after every push.

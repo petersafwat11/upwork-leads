@@ -150,6 +150,38 @@ const keywords = {
     "canada only",
     "australia based",
     "australia only",
+    // Sales / commission roles (not dev work)
+    "sales partner",
+    "sales representative",
+    "sales rep",
+    "sales executive",
+    "high-commission",
+    "high commission",
+    "commission-only",
+    "commission only",
+    // Ops / support roles (not dev work)
+    "ops support",
+    "ops specialist",
+    "operations specialist",
+    "support specialist",
+    "customer support",
+  ],
+
+  // Testing-focused titles. REJECTED only when the title has no dev signal —
+  // a "QA Engineer" / "Test Engineer" / "Manual Testing" post is testing-only,
+  // but a "Full Stack Developer" role that also mentions testing is fine.
+  // (Kept separate from rejectTitlesUnlessDev because its dev-check must NOT
+  // treat the bare word "engineer" as dev — "QA Engineer" contains it.)
+  rejectTitlesTestingOnly: [
+    "qa engineer",
+    "qa tester",
+    "qa analyst",
+    "quality assurance",
+    "test engineer",
+    "manual testing",
+    "software tester",
+    "automation tester",
+    "sdet",
   ],
 
   rejectTitlesUnlessDev: [

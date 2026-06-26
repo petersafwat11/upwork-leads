@@ -6,6 +6,8 @@ const { filterJobs } = require("./filters/hard-reject");
 const { scoreJobs } = require("./scoring/scorer");
 const { notify } = require("./notifier");
 const tracker = require("./data/tracker");
+const leadLogger = require("./reports/lead-logger");
+const { generateAndDeliverReport } = require("./reports/daily-report");
 
 const app = express();
 
@@ -29,30 +31,53 @@ async function runScan() {
     newMatches: 0,
   };
 
+  // Buckets we accumulate for the lead logger (every code path logs once).
+  let rejectedJobs = [];
+  let belowThresholdJobs = [];
+  let sentJobs = [];
+
+  // Log + record run once, then exit. Keeps logging consistent across the
+  // several early-return paths below.
+  const finish = () => {
+    leadLogger.logScan({
+      sent: sentJobs,
+      belowThreshold: belowThresholdJobs,
+      hardRejected: rejectedJobs,
+    });
+    tracker.recordRun(
+      scanWindow.from,
+      scanWindow.to,
+      stats.fetched,
+      sentJobs.length
+    );
+  };
+
   const allJobs = await fetchJobs(scanWindow);
   stats.fetched = allJobs.length;
 
   if (allJobs.length === 0) {
     console.log("No jobs found in scan window");
-    tracker.recordRun(scanWindow.from, scanWindow.to, 0, 0);
+    finish();
     return;
   }
 
-  const { passed: filteredJobs } = filterJobs(allJobs);
+  const { passed: filteredJobs, rejected } = filterJobs(allJobs);
+  rejectedJobs = rejected;
   stats.afterFilter = filteredJobs.length;
 
   if (filteredJobs.length === 0) {
     console.log("All jobs rejected by hard filters");
-    tracker.recordRun(scanWindow.from, scanWindow.to, stats.fetched, 0);
+    finish();
     return;
   }
 
-  const { scored: scoredJobs } = scoreJobs(filteredJobs);
+  const { scored: scoredJobs, failed } = scoreJobs(filteredJobs);
+  belowThresholdJobs = failed;
   stats.afterScoring = scoredJobs.length;
 
   if (scoredJobs.length === 0) {
     console.log("No jobs passed scoring threshold");
-    tracker.recordRun(scanWindow.from, scanWindow.to, stats.fetched, 0);
+    finish();
     return;
   }
 
@@ -67,23 +92,19 @@ async function runScan() {
 
   if (newJobs.length === 0) {
     console.log("No new jobs to notify about");
-    tracker.recordRun(scanWindow.from, scanWindow.to, stats.fetched, 0);
+    finish();
     return;
   }
 
   const result = await notify(newJobs, scanWindow, stats);
 
   if (result.sent) {
+    sentJobs = newJobs;
     tracker.markMultipleLinksAsSent(newJobs);
     console.log(`Notification sent via ${result.method}`);
   }
 
-  tracker.recordRun(
-    scanWindow.from,
-    scanWindow.to,
-    stats.fetched,
-    newJobs.length
-  );
+  finish();
 
   console.log("\n========================================");
   console.log("SCAN COMPLETE");
@@ -127,6 +148,19 @@ app.get("/scan", async (req, res) => {
   }
 });
 
+// Generate the daily lead-quality report on demand (and post to Slack).
+// Optional ?hours=24 to control the lookback window.
+app.get("/report", async (req, res) => {
+  try {
+    const hours = parseInt(req.query.hours, 10) || 24;
+    const result = await generateAndDeliverReport({ hours });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error("Report error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get("/history", (req, res) => {
   const lastRun = tracker.getLastRun();
   const sentLinks = tracker.loadSentLinks();
@@ -145,6 +179,20 @@ if (require.main === module) {
     runScan().catch((err) => console.error("Scheduled scan error:", err));
   });
   console.log(`Cron scheduled: ${config.rss.cronSchedule}`);
+
+  // Daily lead-quality report (heuristic, $0). Posts a summary to Slack and
+  // writes a full markdown report to data/reports/ for Claude Code review.
+  if (config.logging.enabled) {
+    cron.schedule(config.logging.reportCronSchedule, () => {
+      console.log("Cron triggered daily report");
+      generateAndDeliverReport({ hours: 24 }).catch((err) =>
+        console.error("Daily report error:", err)
+      );
+    });
+    console.log(
+      `Daily report scheduled: ${config.logging.reportCronSchedule}`
+    );
+  }
 
   app.listen(config.port, () => {
     console.log(`\nUpwork Job Scanner running on port ${config.port}`);

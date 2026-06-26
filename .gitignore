@@ -8,6 +8,12 @@ data/sent-links.json
 data/run-history.json
 data/chrome-profile/
 
+# Lead logs + generated reports (VPS-only, auto-generated).
+# data/logs/ANALYSIS_GUIDE.md stays tracked; only the raw data is ignored.
+data/logs/*.jsonl
+data/logs/.seen.json
+data/reports/
+
 # Debug artifacts
 debug-*
 

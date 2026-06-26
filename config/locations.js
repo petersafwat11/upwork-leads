@@ -107,6 +107,11 @@ const locations = {
     "ho chi minh",
     "hanoi",
     "dhaka",
+    "philippines",
+    "manila",
+    "quezon city",
+    "cebu",
+    "davao",
   ],
 
   isPreferred(location) {

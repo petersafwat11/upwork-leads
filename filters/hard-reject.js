@@ -65,6 +65,40 @@ function checkJobTitle(job) {
     }
   }
 
+  // Testing-only titles: reject unless the title shows real dev intent.
+  // Note the dev-check deliberately omits the bare word "engineer" because
+  // "QA Engineer" / "Test Engineer" contain it but are testing-only.
+  if (keywords.rejectTitlesTestingOnly) {
+    for (const testTitle of keywords.rejectTitlesTestingOnly) {
+      if (titleLower.includes(testTitle.toLowerCase())) {
+        const hasDevInTitle = [
+          "developer",
+          "full stack",
+          "fullstack",
+          "full-stack",
+          "frontend",
+          "front-end",
+          "front end",
+          "backend",
+          "back-end",
+          "back end",
+          "react",
+          "node",
+          "web developer",
+          "software engineer",
+          "programmer",
+        ].some((kw) => titleLower.includes(kw));
+
+        if (!hasDevInTitle) {
+          return {
+            passed: false,
+            reason: `Testing-only job title: "${job.title}"`,
+          };
+        }
+      }
+    }
+  }
+
   if (keywords.rejectTitlesUnlessDev) {
     for (const designTitle of keywords.rejectTitlesUnlessDev) {
       if (titleLower.includes(designTitle.toLowerCase())) {
@@ -303,11 +337,15 @@ function applyHardFilters(job) {
     passed: true,
     reasons: [],
     proposalTier: "unknown",
+    // Set to the filter that caused rejection (null if the job passes).
+    // Used by the lead logger / daily report to bucket rejections cleanly.
+    category: null,
   };
 
   const titleCheck = checkJobTitle(job);
   if (!titleCheck.passed) {
     results.passed = false;
+    results.category = "title";
     results.reasons.push(titleCheck.reason);
     return results;
   }
@@ -315,6 +353,7 @@ function applyHardFilters(job) {
   const skillsCheck = checkMandatorySkills(job);
   if (!skillsCheck.passed) {
     results.passed = false;
+    results.category = "reject_skill";
     results.reasons.push(skillsCheck.reason);
     return results;
   }
@@ -322,6 +361,7 @@ function applyHardFilters(job) {
   const locationRestrictionsCheck = checkLocationRestrictions(job);
   if (!locationRestrictionsCheck.passed) {
     results.passed = false;
+    results.category = "location_restriction";
     results.reasons.push(locationRestrictionsCheck.reason);
     return results;
   }
@@ -329,6 +369,7 @@ function applyHardFilters(job) {
   const hiresCheck = checkHires(job);
   if (!hiresCheck.passed) {
     results.passed = false;
+    results.category = "already_hired";
     results.reasons.push(hiresCheck.reason);
     return results;
   }
@@ -337,6 +378,7 @@ function applyHardFilters(job) {
   results.proposalTier = proposalCheck.tier;
   if (!proposalCheck.passed) {
     results.passed = false;
+    results.category = "too_many_proposals";
     results.reasons.push(proposalCheck.reason);
     return results;
   }
@@ -347,6 +389,8 @@ function applyHardFilters(job) {
   const rejectKeyword = containsRejectKeyword(textToCheck);
   if (rejectKeyword) {
     results.passed = false;
+    results.category = "reject_keyword";
+    results.matchedTerm = rejectKeyword;
     results.reasons.push(`Contains reject keyword: "${rejectKeyword}"`);
     return results;
   }
@@ -354,6 +398,7 @@ function applyHardFilters(job) {
   const conditionalCheck = checkConditionalRejectKeywords(job);
   if (!conditionalCheck.passed) {
     results.passed = false;
+    results.category = "conditional_keyword";
     results.reasons.push(conditionalCheck.reason);
     return results;
   }
@@ -361,6 +406,8 @@ function applyHardFilters(job) {
   const redFlagPhrase = containsRedFlagPhrase(textToCheck);
   if (redFlagPhrase) {
     results.passed = false;
+    results.category = "red_flag_phrase";
+    results.matchedTerm = redFlagPhrase;
     results.reasons.push(`Contains red flag phrase: "${redFlagPhrase}"`);
     return results;
   }
@@ -368,6 +415,7 @@ function applyHardFilters(job) {
   const locationCheck = checkLocation(job);
   if (!locationCheck.passed) {
     results.passed = false;
+    results.category = "location";
     results.reasons.push(locationCheck.reason);
     return results;
   }
@@ -376,6 +424,7 @@ function applyHardFilters(job) {
   const budgetCheck = checkBudget(job);
   if (!budgetCheck.passed) {
     results.passed = false;
+    results.category = "budget";
     results.reasons.push(budgetCheck.reason);
     return results;
   }
@@ -384,6 +433,7 @@ function applyHardFilters(job) {
   const ageCheck = checkJobAge(job);
   if (!ageCheck.passed) {
     results.passed = false;
+    results.category = "too_old";
     results.reasons.push(ageCheck.reason);
     return results;
   }
