@@ -9,15 +9,7 @@ async function notify(jobs, scanInfo, stats) {
     return { sent: false, reason: "no_jobs" };
   }
 
-  // Dev mode: write to file
-  if (config.isDev) {
-    console.log("DEV mode: Writing to file instead of sending notifications");
-    const reportPath = writeReport(jobs, scanInfo, stats);
-    writeLatestReport(jobs, scanInfo, stats);
-    return { sent: true, method: "file", path: reportPath };
-  }
-
-  // Production: try Slack first, then email as fallback
+  // Try Slack first, then email as fallback
   const results = [];
 
   // Slack

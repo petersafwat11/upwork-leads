@@ -26,31 +26,9 @@ function checkLocation(job) {
   }
 
   if (locations.isRedFlag(job.clientLocation)) {
-    const hasGoodBudget =
-      job.budget >= 500 || (job.hourlyRange && job.hourlyRange.max >= 15);
-    const hasLowProposals = job.proposals && job.proposals.max <= 20;
-    const hasGoodClientRate = job.clientAvgHourlyRate >= 15;
-    const hasHighSpend = job.clientTotalSpent >= 1000;
-    const hasGoodRating = job.clientRating >= 4.5;
-
-    const positiveSignals = [
-      hasGoodBudget,
-      hasLowProposals,
-      hasGoodClientRate,
-      hasHighSpend,
-      hasGoodRating,
-    ].filter(Boolean).length;
-
-    if (positiveSignals >= 2) {
-      return {
-        passed: true,
-        reason: `Red flag location (${job.clientLocation}) but ${positiveSignals} positive signals`,
-        isRedFlag: true,
-      };
-    }
     return {
       passed: false,
-      reason: `Red flag location: ${job.clientLocation} (only ${positiveSignals}/2 positive signals)`,
+      reason: `Client location not preferred: ${job.clientLocation}`,
       isRedFlag: true,
     };
   }
@@ -90,29 +68,22 @@ function checkJobTitle(job) {
   if (keywords.rejectTitlesUnlessDev) {
     for (const designTitle of keywords.rejectTitlesUnlessDev) {
       if (titleLower.includes(designTitle.toLowerCase())) {
-        const textToCheck = `${job.title} ${job.description} ${job.skills.join(
-          " "
-        )}`.toLowerCase();
-        const hasDevKeywords = [
+        // Only check the title itself — description mentioning React/Tailwind
+        // doesn't make a designer job a dev job
+        const hasDevInTitle = [
           "developer",
-          "development",
+          "engineer",
           "frontend",
           "backend",
           "full stack",
           "fullstack",
-          "react",
-          "next.js",
-          "node.js",
-          "javascript",
-          "typescript",
-          "coding",
-          "programming",
-        ].some((kw) => textToCheck.includes(kw));
+          "programmer",
+        ].some((kw) => titleLower.includes(kw));
 
-        if (!hasDevKeywords) {
+        if (!hasDevInTitle) {
           return {
             passed: false,
-            reason: `Design-only job, no development: "${job.title}"`,
+            reason: `Design-only job title: "${job.title}"`,
           };
         }
       }

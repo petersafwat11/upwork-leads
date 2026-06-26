@@ -40,6 +40,15 @@ function formatJobBlock(job, index) {
       ? `${ageMinutes}m ago`
       : `${Math.round(ageMinutes / 60)}h ago`;
 
+  const fields = [
+    { type: "mrkdwn", text: `*Budget:* ${budget}` },
+    { type: "mrkdwn", text: `*Score:* ${score}` },
+    { type: "mrkdwn", text: `*Posted:* ${ageText}` },
+    { type: "mrkdwn", text: `*Skills:* ${skills}` },
+  ];
+  if (proposals !== "N/A") fields.push({ type: "mrkdwn", text: `*Proposals:* ${proposals}` });
+  if (country && country !== "Unknown") fields.push({ type: "mrkdwn", text: `*Location:* ${country}` });
+
   return [
     {
       type: "section",
@@ -50,14 +59,7 @@ function formatJobBlock(job, index) {
     },
     {
       type: "section",
-      fields: [
-        { type: "mrkdwn", text: `*Budget:* ${budget}` },
-        { type: "mrkdwn", text: `*Proposals:* ${proposals}` },
-        { type: "mrkdwn", text: `*Score:* ${score}` },
-        { type: "mrkdwn", text: `*Posted:* ${ageText}` },
-        { type: "mrkdwn", text: `*Location:* ${country}` },
-        { type: "mrkdwn", text: `*Skills:* ${skills}` },
-      ],
+      fields,
     },
     {
       type: "context",

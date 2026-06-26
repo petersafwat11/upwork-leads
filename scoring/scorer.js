@@ -251,7 +251,7 @@ function scoreJob(job) {
     score: totalScore,
     breakdown,
     reasons,
-    passed: totalScore >= config.thresholds.minScore,
+    passed: totalScore >= config.thresholds.minScore && keywordResult.score > 0,
   };
 }
 

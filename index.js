@@ -159,13 +159,11 @@ app.get("/history", (req, res) => {
 
 // Only start cron + server when run directly (not imported by manual-scan)
 if (require.main === module) {
-  if (!config.isDev) {
-    cron.schedule(config.rss.cronSchedule, () => {
-      console.log("Cron triggered scan");
-      runScan().catch((err) => console.error("Scheduled scan error:", err));
-    });
-    console.log(`Cron scheduled: ${config.rss.cronSchedule}`);
-  }
+  cron.schedule(config.rss.cronSchedule, () => {
+    console.log("Cron triggered scan");
+    runScan().catch((err) => console.error("Scheduled scan error:", err));
+  });
+  console.log(`Cron scheduled: ${config.rss.cronSchedule}`);
 
   app.listen(config.port, () => {
     console.log(`\nUpwork Job Scanner running on port ${config.port}`);

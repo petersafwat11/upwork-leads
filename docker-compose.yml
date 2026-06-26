@@ -1,42 +1,48 @@
-# VPS deployment: scanner + FlareSolverr
-# Usage: cp .env.example .env && edit .env && docker compose up -d
+# Production stack for the Upwork job scanner — runs on the Contabo VPS at
+# /opt/upwork-scanner/docker-compose.yml (alongside the restaurant stack at
+# /opt/restaurant). Internal-only: nothing is published to the host, the
+# scanner just runs on a cron and pushes matches to Slack.
+#
+# The scanner builds from source on the VPS (no GHCR). Secrets/config come from
+# the .env file you place next to this compose file (chmod 600, never committed).
+#
+# Operations:
+#   first run:  cp .env.example .env && nano .env && docker compose up -d --build
+#   deploy:     git pull && docker compose up -d --build && docker image prune -f
+#   logs:       docker compose logs -f --tail=200 scanner
+#   restart:    docker compose restart scanner
 
 services:
   scanner:
     build: .
-    ports:
-      - "3000:3000"
+    init: true
+    # All user config (Slack webhook, SMTP, Upwork URL, thresholds) is injected
+    # from .env. The `environment` block below overrides the few values that
+    # must differ inside the container (it takes precedence over env_file).
+    env_file:
+      - .env
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - FETCH_METHOD=flaresolverr
-      - FLARESOLVERR_URL=http://flaresolverr:8191
-      - UPWORK_RSS_URL=${UPWORK_RSS_URL}
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
-      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
-      - SMTP_PORT=${SMTP_PORT:-587}
-      - SMTP_SECURE=${SMTP_SECURE:-false}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - EMAIL_FROM=${EMAIL_FROM}
-      - EMAIL_TO=${EMAIL_TO}
-      - MIN_SCORE=${MIN_SCORE:-8}
-      - MIN_BUDGET=${MIN_BUDGET:-500}
-      - MAX_JOB_AGE_MINUTES=${MAX_JOB_AGE_MINUTES:-15}
-      - CRON_SCHEDULE=${CRON_SCHEDULE:-*/10 * * * *}
+      NODE_ENV: production
+      PORT: "3000"
+      FETCH_METHOD: flaresolverr
+      FLARESOLVERR_URL: http://flaresolverr:8191
     volumes:
+      # Named volume persists sent-links.json / run-history.json across
+      # redeploys so the scanner doesn't re-send leads after every push.
+      # On first creation Docker copies data/tracker.js from the image into
+      # the volume; see RUNBOOK if you change tracker.js logic.
       - scanner-data:/app/data
     depends_on:
       - flaresolverr
     restart: unless-stopped
 
   flaresolverr:
+    # Solves Cloudflare challenges so the scanner can fetch Upwork pages.
     image: ghcr.io/flaresolverr/flaresolverr:latest
+    init: true
     environment:
       - LOG_LEVEL=info
       - TZ=UTC
-    ports:
-      - "8191:8191"
     restart: unless-stopped
 
 volumes:

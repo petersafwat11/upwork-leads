@@ -65,7 +65,31 @@ npm start
 npm run scan
 ```
 
+## Running with Docker
+
+The scanner ships with a `Dockerfile` and `docker-compose.yml` that run it
+alongside a FlareSolverr sidecar (for Cloudflare bypass):
+
+```bash
+cp .env.example .env   # fill in SLACK_WEBHOOK_URL, UPWORK_RSS_URL, etc.
+docker compose up -d --build
+docker compose logs -f scanner
+```
+
+Sent-links / run-history are persisted in the `scanner-data` named volume.
+
+## Deployment (VPS)
+
+This project is deployed to a Contabo VPS as an internal-only worker — it just
+runs on a cron and pushes matches to Slack (no public endpoints). Pushing to
+`main` auto-deploys via `.github/workflows/deploy.yml` (build-on-VPS over SSH).
+
+See **[deploy/RUNBOOK.md](deploy/RUNBOOK.md)** for first-time setup, the
+required GitHub Actions secrets, and day-to-day operations.
+
 ## API Endpoints
+
+(Local/internal only — not exposed publicly in production.)
 
 - `GET /` - Status and last run info
 - `GET /scan` - Trigger manual scan
