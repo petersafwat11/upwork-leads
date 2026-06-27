@@ -29,6 +29,9 @@ services:
       # Container-local time = Cairo so the daily lead report fires at 8 AM
       # local (REPORT_CRON_SCHEDULE default "0 8 * * *"). Needs tzdata (in image).
       TZ: Africa/Cairo
+      # Min score to send a lead. Set here (overrides the VPS .env) so it can be
+      # changed via git push. To hand control back to the VPS .env, remove this.
+      MIN_SCORE: "7"
     volumes:
       # Named volume persists sent-links.json / run-history.json across
       # redeploys so the scanner doesn't re-send leads after every push.
