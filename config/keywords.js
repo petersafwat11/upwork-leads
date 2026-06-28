@@ -267,6 +267,61 @@ const keywords = {
     stripe: { keywords: ["stripe", "payment integration", "payments"], points: 1 },
     crud: { keywords: ["crud", "data table", "data grid"], points: 1 },
   },
+
+  // Specialty boosts — reward the things Peter is uniquely strong at (verified
+  // across halla/limitless/incarton/restaurant/xtrack). One match per category.
+  // Scored separately from the stack keywords so the daily report shows it.
+  specialtyKeywords: {
+    payments: {
+      keywords: [
+        "stripe",
+        "payment integration",
+        "payment gateway",
+        "subscription billing",
+        "recurring billing",
+        "billing system",
+        "checkout flow",
+        "paypal",
+        "marketplace payout",
+        "metered billing",
+      ],
+      points: 3,
+    },
+    multiTenant: {
+      keywords: ["multi-tenant", "multitenant", "multi tenant", "b2b saas", "saas platform"],
+      points: 3,
+    },
+    booking: {
+      keywords: [
+        "booking",
+        "reservation",
+        "reservations",
+        "scheduling",
+        "appointment",
+        "availability calendar",
+      ],
+      points: 2,
+    },
+    realtime: {
+      keywords: ["real-time", "realtime", "websocket", "socket.io", "live updates"],
+      points: 1,
+    },
+    verticals: {
+      keywords: [
+        "insurance",
+        "logistics",
+        "freight",
+        "warehouse",
+        "inventory management",
+        "restaurant",
+        "hospitality",
+        "event management",
+        "ticketing",
+        "erp",
+      ],
+      points: 1,
+    },
+  },
 };
 
 module.exports = keywords;

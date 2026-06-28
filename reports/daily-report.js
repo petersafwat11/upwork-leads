@@ -120,7 +120,7 @@ function jobLine(rec, { showScore = true, showReason = false } = {}) {
   if (showReason && rec.reason) line += `\n  _${rec.reason}_`;
   if (showScore && rec.scoreBreakdown) {
     const b = rec.scoreBreakdown;
-    line += `\n  breakdown: kw ${b.keywords || 0}, stack ${b.stackDepth || 0}, budget ${b.budget || 0}, recency ${b.recency || 0}, props ${b.proposals || 0}, client ${b.client || 0}, desc ${b.description || 0}, urgency ${b.urgency || 0}`;
+    line += `\n  breakdown: kw ${b.keywords || 0}, stack ${b.stackDepth || 0}, specialty ${b.specialty || 0}, budget ${b.budget || 0}, recency ${b.recency || 0}, props ${b.proposals || 0}, client ${b.client || 0}, desc ${b.description || 0}, urgency ${b.urgency || 0}`;
   }
   return line;
 }

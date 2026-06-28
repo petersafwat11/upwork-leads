@@ -32,6 +32,8 @@ services:
       # Min score to send a lead. Set here (overrides the VPS .env) so it can be
       # changed via git push. To hand control back to the VPS .env, remove this.
       MIN_SCORE: "7"
+      # Min fixed budget ($). Lowered from 800 to catch good smaller projects.
+      MIN_BUDGET: "500"
     volumes:
       # Named volume persists sent-links.json / run-history.json across
       # redeploys so the scanner doesn't re-send leads after every push.

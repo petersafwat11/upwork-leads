@@ -203,6 +203,34 @@ function calculateUrgencyBonus(job) {
   return { score: 0, reason: null };
 }
 
+/**
+ * Specialty bonus — rewards Peter's proven strengths (payments, multi-tenant
+ * SaaS, booking, real-time, his verticals). One match per category, like the
+ * stack-keyword scorer. Tracked separately so the daily report can show it.
+ */
+function calculateSpecialtyBonus(job) {
+  if (!keywords.specialtyKeywords) return { score: 0, reasons: [] };
+
+  const textToCheck = `${job.title} ${job.description} ${job.skills.join(
+    " "
+  )}`.toLowerCase();
+
+  let score = 0;
+  const reasons = [];
+
+  for (const [category, data] of Object.entries(keywords.specialtyKeywords)) {
+    for (const keyword of data.keywords) {
+      if (textToCheck.includes(keyword.toLowerCase())) {
+        score += data.points;
+        reasons.push(`Specialty (${category}): "${keyword}" (+${data.points})`);
+        break;
+      }
+    }
+  }
+
+  return { score, reasons };
+}
+
 function scoreJob(job) {
   const keywordResult = calculateKeywordScore(job);
   const stackDepthResult = calculateStackDepthBonus(keywordResult);
@@ -212,6 +240,7 @@ function scoreJob(job) {
   const clientResult = calculateClientBonus(job);
   const descriptionResult = calculateDescriptionQuality(job);
   const urgencyResult = calculateUrgencyBonus(job);
+  const specialtyResult = calculateSpecialtyBonus(job);
 
   const totalScore =
     keywordResult.score +
@@ -221,7 +250,8 @@ function scoreJob(job) {
     proposalResult.score +
     clientResult.score +
     descriptionResult.score +
-    urgencyResult.score;
+    urgencyResult.score +
+    specialtyResult.score;
 
   const breakdown = {
     keywords: keywordResult.score,
@@ -232,6 +262,7 @@ function scoreJob(job) {
     client: clientResult.score,
     description: descriptionResult.score,
     urgency: urgencyResult.score,
+    specialty: specialtyResult.score,
     total: totalScore,
   };
 
@@ -246,6 +277,7 @@ function scoreJob(job) {
   reasons.push(...clientResult.reasons);
   if (descriptionResult.reason) reasons.push(descriptionResult.reason);
   if (urgencyResult.reason) reasons.push(urgencyResult.reason);
+  reasons.push(...specialtyResult.reasons);
 
   return {
     score: totalScore,
