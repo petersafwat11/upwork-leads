@@ -12,8 +12,24 @@ function checkHires(job) {
   return { passed: true, reason: "No hires yet" };
 }
 
+// Hard-block countries the user refuses with no override. Used as a text
+// backstop below in case the scraper failed to populate clientLocation.
+const HARD_BLOCK_COUNTRY_RE = /\b(india|pakistan|bangladesh)\b/i;
+
 function checkLocation(job) {
   if (!job.clientLocation) {
+    // clientLocation often fails to parse from scraped HTML. Backstop: scan the
+    // whole job text for the no-override countries (word-boundaried so "Indiana"
+    // doesn't false-match "India"). Better an occasional false reject here than
+    // ever letting a Pakistan/India client through — per user's hard rule.
+    const text = `${job.title} ${job.description} ${(job.skills || []).join(" ")}`;
+    if (HARD_BLOCK_COUNTRY_RE.test(text)) {
+      return {
+        passed: false,
+        reason: "Hard-block country mentioned in job text (no clientLocation parsed)",
+        isRedFlag: true,
+      };
+    }
     return { passed: true, reason: "Location not available", isRedFlag: false };
   }
 
@@ -263,11 +279,11 @@ function checkConditionalRejectKeywords(job) {
     "web development",
     "web developer",
     "express",
-    "api",
-    "html",
-    "css",
     "tailwind",
   ];
+  // Note: deliberately NOT counting bare "api"/"html"/"css" as web-dev context —
+  // a Python/Golang backend job that merely says "REST API" was sneaking past
+  // the Python-unless-webdev gate. Real React/Node jobs still match above.
 
   const hasWebDevContext = webDevKeywords.some((kw) =>
     textToCheck.includes(kw)
@@ -294,10 +310,16 @@ function checkConditionalRejectKeywords(job) {
 
 function checkBudget(job) {
   if (job.budgetType === "hourly") {
-    if (job.hourlyRange && job.hourlyRange.max >= 25) {
-      return { passed: true, reason: "Hourly rate acceptable" };
+    const minRate = config.thresholds.minHourlyRate;
+    // Reject only when the TOP of the range is below our floor (clearly too
+    // low) — a range like $10-$30 still has acceptable rates so we keep it.
+    if (job.hourlyRange && job.hourlyRange.max && job.hourlyRange.max < minRate) {
+      return {
+        passed: false,
+        reason: `Hourly rate too low: $${job.hourlyRange.min}-$${job.hourlyRange.max}/hr (min $${minRate}/hr)`,
+      };
     }
-    return { passed: true, reason: "Hourly job - no fixed budget to check" };
+    return { passed: true, reason: "Hourly rate acceptable" };
   }
 
   if (job.budget === null) {

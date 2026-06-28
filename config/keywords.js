@@ -70,6 +70,44 @@ const keywords = {
     "packaging design",
     "graphic design",
     "dielines",
+    // Non-Node backends (user only does Node/Express/Nest) — see [[user-profile]]
+    "golang",
+    "go developer",
+    "spring boot",
+    "spring framework",
+    // No-code / low-code platforms (not dev work)
+    "zapier",
+    "airtable",
+    "softr",
+    "gohighlevel",
+    "go high level",
+    "highlevel",
+    "housecall pro",
+    "commonsku",
+    "magento",
+    // Marketing / analytics / ads (not dev work)
+    "google tag manager",
+    "tracking specialist",
+    "meta ads",
+    "facebook ads",
+    "google ads",
+    "seo expert",
+    "seo specialist",
+    "seo optimization",
+    "market research",
+    // Testing-/teaching-/assistant-only roles
+    "performance testing",
+    "tutoring",
+    "tutor needed",
+    "personal assistant",
+    // Hardware / IoT / AR (not web dev)
+    "augmented reality",
+    "webar",
+    "bluetooth low energy",
+    "apple find my",
+    // Browser extensions (user not experienced)
+    "chrome extension",
+    "browser extension",
   ],
 
   rejectUnlessWebDev: [
@@ -165,6 +203,10 @@ const keywords = {
     "operations specialist",
     "support specialist",
     "customer support",
+    "personal assistant",
+    "market research",
+    "visual artist",
+    "seo expert",
   ],
 
   // Testing-focused titles. REJECTED only when the title has no dev signal —
@@ -188,8 +230,11 @@ const keywords = {
     "ui/ux designer",
     "ux designer",
     "ui designer",
+    "ui/ux",
     "graphic designer",
     "product designer",
+    "product design",
+    "design specialist",
     "senior designer",
     "lead designer",
     "designer",

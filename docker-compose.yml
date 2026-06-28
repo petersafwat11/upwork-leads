@@ -34,6 +34,8 @@ services:
       MIN_SCORE: "7"
       # Min fixed budget ($). Lowered from 800 to catch good smaller projects.
       MIN_BUDGET: "500"
+      # Reject hourly jobs whose top rate is below this ($/hr).
+      MIN_HOURLY_RATE: "15"
     volumes:
       # Named volume persists sent-links.json / run-history.json across
       # redeploys so the scanner doesn't re-send leads after every push.

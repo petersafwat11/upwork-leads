@@ -38,6 +38,7 @@ const config = {
     minHireRate: parseInt(process.env.MIN_HIRE_RATE, 10) || 50,
     minPastHires: parseInt(process.env.MIN_PAST_HIRES, 10) || 1,
     minScore: parseInt(process.env.MIN_SCORE, 10) || 10,
+    minHourlyRate: parseInt(process.env.MIN_HOURLY_RATE, 10) || 15,
     maxJobAgeMinutes: parseInt(process.env.MAX_JOB_AGE_MINUTES, 10) || 15,
     highBudgetThreshold:
       parseInt(process.env.HIGH_BUDGET_THRESHOLD, 10) || 1000,
