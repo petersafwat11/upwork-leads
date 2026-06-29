@@ -108,6 +108,28 @@ const keywords = {
     // Browser extensions (user not experienced)
     "chrome extension",
     "browser extension",
+    // IoT / embedded / hardware (not web dev)
+    "firmware",
+    "embedded systems",
+    "embedded engineer",
+    "iot system",
+    "iot device",
+    "internet of things",
+    "satellite",
+    "rf engineer",
+    // Shopify — TEMPORARILY disabled per user 2026-06-29 ("get it back soon").
+    // REMOVE these two lines to re-enable Shopify leads.
+    "shopify",
+    "shopify plus",
+    // Social-media content / marketing (not app dev)
+    "reels",
+    "instagram",
+    "cro consultant",
+    "conversion rate optimization",
+    // Content creation / video editing
+    "content creation",
+    "capcut",
+    "youtube content",
   ],
 
   rejectUnlessWebDev: [
@@ -207,6 +229,8 @@ const keywords = {
     "market research",
     "visual artist",
     "seo expert",
+    "website design",
+    "web design",
   ],
 
   // Testing-focused titles. REJECTED only when the title has no dev signal —

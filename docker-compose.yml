@@ -31,7 +31,7 @@ services:
       TZ: Africa/Cairo
       # Min score to send a lead. Set here (overrides the VPS .env) so it can be
       # changed via git push. To hand control back to the VPS .env, remove this.
-      MIN_SCORE: "7"
+      MIN_SCORE: "10"
       # Min fixed budget ($). Lowered from 800 to catch good smaller projects.
       MIN_BUDGET: "500"
       # Reject hourly jobs whose top rate is below this ($/hr).
