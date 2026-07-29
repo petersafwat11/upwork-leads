@@ -4,6 +4,9 @@ const config = require("../config");
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+let flareSolverrSessionReady = false;
+let flareSolverrSessionInit = null;
+
 /**
  * Fetch HTML from Upwork, handling Cloudflare via configured proxy method.
  *
@@ -57,7 +60,7 @@ async function fetchViaScraperApi(url) {
   return res.text();
 }
 
-async function fetchViaFlareSolverr(url) {
+async function callFlareSolverr(payload) {
   const solverrUrl = config.flareSolverrUrl;
   if (!solverrUrl) {
     throw new Error(
@@ -65,25 +68,86 @@ async function fetchViaFlareSolverr(url) {
     );
   }
 
-  console.log("  Fetching via FlareSolverr...");
   const res = await fetch(`${solverrUrl}/v1`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      cmd: "request.get",
-      url: url,
-      maxTimeout: 60000,
-    }),
-    signal: AbortSignal.timeout(90000),
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(config.flareSolverrTimeoutMs + 30000),
   });
 
-  if (!res.ok) {
-    throw new Error(`FlareSolverr returned ${res.status}: ${res.statusText}`);
+  const responseText = await res.text();
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (err) {
+    throw new Error(
+      `FlareSolverr returned invalid JSON (${res.status}): ${responseText.slice(0, 200)}`
+    );
   }
 
-  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      `FlareSolverr returned ${res.status}: ${data.message || res.statusText}`
+    );
+  }
+
   if (data.status !== "ok") {
     throw new Error(`FlareSolverr error: ${data.message || "unknown"}`);
+  }
+  return data;
+}
+
+async function ensureFlareSolverrSession() {
+  if (flareSolverrSessionReady) return;
+  if (flareSolverrSessionInit) return flareSolverrSessionInit;
+
+  flareSolverrSessionInit = (async () => {
+    const data = await callFlareSolverr({
+      cmd: "sessions.create",
+      session: config.flareSolverrSession,
+    });
+    flareSolverrSessionReady = true;
+    console.log(`  FlareSolverr session ready: ${data.message}`);
+  })();
+
+  try {
+    await flareSolverrSessionInit;
+  } finally {
+    flareSolverrSessionInit = null;
+  }
+}
+
+async function fetchViaFlareSolverr(url) {
+  await ensureFlareSolverrSession();
+
+  const request = async () => {
+    console.log("  Fetching via FlareSolverr persistent session...");
+    return callFlareSolverr({
+      cmd: "request.get",
+      url,
+      session: config.flareSolverrSession,
+      maxTimeout: config.flareSolverrTimeoutMs,
+      waitInSeconds: 5,
+      tabs_till_verify: config.flareSolverrTabsToVerify,
+    });
+  };
+
+  let data;
+  try {
+    data = await request();
+  } catch (err) {
+    if (!/session.*(?:not found|does not exist)/i.test(err.message)) {
+      throw err;
+    }
+
+    // FlareSolverr may have restarted while the scanner stayed up.
+    flareSolverrSessionReady = false;
+    await ensureFlareSolverrSession();
+    data = await request();
+  }
+
+  if (!data.solution || typeof data.solution.response !== "string") {
+    throw new Error("FlareSolverr returned no HTML response");
   }
   return data.solution.response;
 }
@@ -536,7 +600,9 @@ async function fetchJobs(scanWindow) {
           html = await fetchHtml(searchUrl);
         } catch (retryErr) {
           console.error(`  Retry failed: ${retryErr.message}`);
-          return [];
+          throw new Error(
+            `Unable to fetch the first Upwork results page after retry: ${retryErr.message}`
+          );
         }
       } else {
         break;
@@ -557,7 +623,7 @@ async function fetchJobs(scanWindow) {
       console.error(
         "  Cloudflare challenge detected! Switch FETCH_METHOD to scraperapi or flaresolverr."
       );
-      return [];
+      throw new Error("Upwork returned a Cloudflare challenge instead of jobs");
     }
 
     const jobs = parseJobsFromHtml(html);

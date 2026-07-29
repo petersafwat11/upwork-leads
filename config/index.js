@@ -18,6 +18,12 @@ const config = {
   fetchMethod: (process.env.FETCH_METHOD || "direct").toLowerCase(),
   scraperApiKey: process.env.SCRAPER_API_KEY || "",
   flareSolverrUrl: (process.env.FLARESOLVERR_URL || "").replace(/\/$/, ""),
+  flareSolverrSession:
+    process.env.FLARESOLVERR_SESSION || "upwork-scanner",
+  flareSolverrTabsToVerify:
+    parseInt(process.env.FLARESOLVERR_TABS_TO_VERIFY, 10) || 2,
+  flareSolverrTimeoutMs:
+    parseInt(process.env.FLARESOLVERR_TIMEOUT_MS, 10) || 120000,
 
   slack: {
     webhookUrl: process.env.SLACK_WEBHOOK_URL || "",

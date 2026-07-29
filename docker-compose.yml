@@ -26,6 +26,11 @@ services:
       PORT: "3000"
       FETCH_METHOD: flaresolverr
       FLARESOLVERR_URL: http://flaresolverr:8191
+      # Reuse one browser session and press Tab twice to reach Upwork's
+      # Turnstile control. This is required by the current challenge layout.
+      FLARESOLVERR_SESSION: upwork-scanner
+      FLARESOLVERR_TABS_TO_VERIFY: "2"
+      FLARESOLVERR_TIMEOUT_MS: "120000"
       # Container-local time = Cairo so the daily lead report fires at 8 AM
       # local (REPORT_CRON_SCHEDULE default "0 8 * * *"). Needs tzdata (in image).
       TZ: Africa/Cairo
